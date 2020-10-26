@@ -1,19 +1,23 @@
-package accel
+package main
 
 import (
-	"machine"
+	"fmt"
 	"time"
+	"wio/display"
+	"wio/statusbar"
+
+	"machine"
 
 	"tinygo.org/x/drivers/lis3dh"
+)
+
+var (
+	accel lis3dh.Device
 )
 
 type AccelData struct {
 	X, Y, Z int32
 }
-
-var (
-	accel lis3dh.Device
-)
 
 func InitAccel() {
 	i2c := machine.I2C0
@@ -28,9 +32,16 @@ func GetAccel() AccelData {
 	return AccelData{X: x, Y: y, Z: z}
 }
 
-func GetAccelChan(c chan<- AccelData, poll time.Duration) {
+func main() {
+
+	InitAccel()
+	display.InitDisplay()
+
 	for {
-		c <- GetAccel()
-		time.Sleep(poll)
+		a := GetAccel()
+		s := fmt.Sprintf("x: %-4d y: %-4d z: %-4d", a.X/10000, a.Y/10000, a.Z/10000)
+		statusbar.Status(s, statusbar.White, statusbar.Red)
+		time.Sleep(time.Millisecond * 50)
 	}
+
 }
